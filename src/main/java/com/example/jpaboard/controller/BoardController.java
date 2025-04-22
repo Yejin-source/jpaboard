@@ -100,7 +100,7 @@ public class BoardController {
 	
 	// board 수정
 	@GetMapping("/board/modifyBoard")
-	public String addboard(Model model, @RequestParam Integer no) {
+	public String modifyBoard(Model model, @RequestParam Integer no) {
 		Board board = boardRepository.findById(no).orElse(null); // null을 허용할 수 있게 변경
 		model.addAttribute("board", board);
 		return "board/modifyBoard";

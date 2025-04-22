@@ -1,10 +1,6 @@
 package com.example.jpaboard.controller;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -105,7 +101,19 @@ public class MemberController {
 	
 	
 	// 회원 정보 수정
+	@GetMapping("/member/modifyMemberPw")
+	public String modifyMemberPw(HttpSession session) {
+		if(session.getAttribute("loginMember") == null) {
+			return "redirect:/member/login";
+		}
+		return "member/modifyMemberPw";
+	}
+	
+	// 회원 정보 수정 기능
 	
 	
 	// 회원 탈퇴
+	
+	
+	// 회원 탈퇴 기능
 }

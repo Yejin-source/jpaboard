@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 public class Member {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY) // DB에 맡기겠다는 것
-	private int memberNo;
+	private Integer memberNo;
 	@Column(name = "member_id")
 	private String memberId;
 	@Column(name = "member_pw")
