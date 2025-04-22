@@ -4,6 +4,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,9 +12,11 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.jpaboard.dto.MemberForm;
 import com.example.jpaboard.entity.Member;
+import com.example.jpaboard.entity.MemberOnlyMemberId;
 import com.example.jpaboard.repository.MemberRepository;
 import com.example.jpaboard.util.SHA256Util;
 
+import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -51,17 +54,58 @@ public class MemberController {
 	}
 	
 	
-	// 로그인
+	// 로그인 폼
 	@GetMapping("/member/login") 
 	public String login() {
 		return "member/login";
 	}
 	
+	// 로그인 액션
+	@PostMapping("/member/login")
+	public String login(HttpSession session, MemberForm memberForm, RedirectAttributes rda) {
+		// pw 암호화
+		memberForm.setMemberPw(SHA256Util.encoding(memberForm.getMemberPw()));
+		// 로그인 확인 메서드
+		MemberOnlyMemberId loginMember
+			= memberRepository.findByMemberIdAndMemberPw(memberForm.getMemberId(), memberForm.getMemberPw());
+		
+		if(loginMember == null) {
+			log.debug("로그인 실패");
+			rda.addFlashAttribute("msg", "로그인 실패");
+			return "redirect:/member/login";
+		}
+		
+		// 로그인 성공 코드 구현
+		log.debug("로그인 성공");
+		session.setAttribute("loginMember", loginMember); // ISSUE: pw 정보까지 세션에 저장됨
+		return "redirect:/member/memberList";
+	}
+	
 	// 로그아웃
+	@GetMapping("/member/logout")
+	public String logout(HttpSession session) {
+		session.invalidate();
+		return "redirect:/member/login";
+	}
 	
-	// 회원정보수정
 	
-	// 회원목록
+	// 회원 목록
+	@GetMapping("/member/memberList")
+	public String memberList(HttpSession session) {
+		//session 인증/인가 검사
+		if(session.getAttribute("loginMember") == null) {
+			return "redirect:/member/login";
+		}
+		
+		// 사용자 목록 + 페이징 + id 검색
+		// Page<Member> = memberRepository.findByMemberIdContaining(Pageable pageable, String word);
+		
+		return "member/memberList";
+	}
 	
-	// 회원탈퇴
+	
+	// 회원 정보 수정
+	
+	
+	// 회원 탈퇴
 }

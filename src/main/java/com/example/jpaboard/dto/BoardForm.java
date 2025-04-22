@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BoardForm {
-	private int no;
+	private Integer no;
 	private String title;
 	private String content;
 	

@@ -135,8 +135,8 @@ public class ArticleController {
 			return "redirect:/articles/show?id="+id;
 		}
 		articleRepository.delete(article);
-		rda.addFlashAttribute("msg", "삭제 성공");
-		return "redirect:/articles/index"; // redirect의 뷰의 모델에서 자동으로 출력 가능	
+		rda.addFlashAttribute("msg", "삭제 성공"); // redirect의 뷰의 모델에서 자동으로 출력 가능
+		return "redirect:/articles/index";
 	}
 	
 	

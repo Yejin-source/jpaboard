@@ -7,8 +7,13 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.example.jpaboard.dto.ArticleForm;
+import com.example.jpaboard.dto.BoardForm;
+import com.example.jpaboard.entity.Article;
 import com.example.jpaboard.entity.Board;
 import com.example.jpaboard.repository.BoardRepository;
 
@@ -21,8 +26,9 @@ public class BoardController {
 	@Autowired // 의존성 주입을 자동으로 해 줌
 	private BoardRepository boardRepository;
 		// 스프링이 알아서 객체를 찾아서 넣어줌 (new 필요 X)
-
 	
+	
+	// 리스트 출력
 	@GetMapping("/board/boardList")
 	public String boardList(Model model
 							, @RequestParam(value = "currentPage", defaultValue = "0") int currentPage
@@ -33,7 +39,7 @@ public class BoardController {
 		
 		PageRequest pageable = PageRequest.of(currentPage, rowPerPage, sort);
 							// PageRequest.of(현재 페이지, 페이지당 데이터 수, 정렬 방식)
-		Page<Board> list = boardRepository.findByTitle(pageable, word);
+		Page<Board> list = boardRepository.findByTitleContaining(pageable, word);
 
 		
 		// 페이징 관련 디버깅
@@ -51,7 +57,7 @@ public class BoardController {
 		model.addAttribute("nextPage", list.getNumber()+1);
 		model.addAttribute("word", word);
 		
-		return "borad/boardList"; // 포워딩
+		return "board/boardList"; // 포워딩
 		
 		/*
 			포워딩(Forward) vs 리다이렉트(Redirect)
@@ -60,6 +66,82 @@ public class BoardController {
 			URL 변화 X | URL 변화 O
 			속도 빠름	| 속도 느림
 		    리스트 보기, 단순 화면 이동 | 로그인 후 메인 페이지 이동, 글 저장 후 목록으로	 
+		*/
+	}
+	
+	
+	// board 추가
+	@GetMapping("/board/addBoard") // doGet() // 요청하면 포워딩이 됨
+	public String addBoardForm() {
+		return "board/addBoard"; // forward 포워딩
+	}
+	
+	// board 추가 (action)
+	@PostMapping("/board/create") // doPost()
+	public String createBoard(BoardForm form) { // @RequestParam, DTO(커맨드객체)
+		System.out.println(form.toString());
+		
+		// DTO -> Entity
+		Board entity = form.toEntity();
+	
+		boardRepository.save(entity); // 레포지토리를 호출할 때는 Entity가 필요 | entity 타입이 되어야 들어올 수 있음
+		return "redirect:/board/boardList"; // GET 호출
+	}
+	
+	
+	// 상세보기
+	@GetMapping("/board/boardOne")
+	public String boardOne(Model model, @RequestParam Integer no) {
+		Board board = boardRepository.findById(no).orElse(null); // null을 허용할 수 있게 변경
+		model.addAttribute("board", board);
+		return "board/boardOne";
+	}
+	
+	
+	// board 수정
+	@GetMapping("/board/modifyBoard")
+	public String addboard(Model model, @RequestParam Integer no) {
+		Board board = boardRepository.findById(no).orElse(null); // null을 허용할 수 있게 변경
+		model.addAttribute("board", board);
+		return "board/modifyBoard";
+	}
+	
+	// board 수정 (action)
+	@PostMapping("/board/update")
+	public String update(BoardForm boardForm) {
+		Board board = boardForm.toEntity();
+		// entity가 키값 보유: 새로운 행을 추가하는 것이 아닌 존재하던 키값의 행을 수정함
+		boardRepository.save(board); // update
+		return "redirect:/board/boardOne?no="+board.getNo();
+	}
+	
+	
+	// 삭제하기
+	@GetMapping("/board/delete")
+	public String delete(@RequestParam Integer no, RedirectAttributes rda) {
+		Board board = boardRepository.findById(no).orElse(null); // null을 허용할 수 있게 변경
+		
+		if(board == null) {
+			rda.addFlashAttribute("msg", "삭제 실패"); // redirect의 뷰의 모델에서 자동으로 출력 가능
+			return "redirect:/board/boardOne?no="+no;
+		}
+		boardRepository.delete(board);
+		rda.addFlashAttribute("msg", "삭제 성공"); // redirect의 뷰의 모델에서 자동으로 출력 가능
+		return "redirect:/board/boardList";
+		
+		/*
+			addFlashAttribute
+			
+			리다이렉트할 때 딱 한 번만 사용하고 자동으로 사라지는 임시 데이터 저장소
+			URL에 'msg=삭제 실패'와 같이 표시되지 않음
+			
+			Controller
+			  ↓ (addFlashAttribute로 임시 저장)
+			Redirect (브라우저에 다시 요청)
+			  ↓
+			View에서 Flash 데이터 읽기
+			  ↓
+			Flash 데이터 자동 삭제
 		*/
 	}
 }

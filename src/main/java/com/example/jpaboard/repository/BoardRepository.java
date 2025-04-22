@@ -12,5 +12,6 @@ public interface BoardRepository extends JpaRepository<Board, Integer> {
 	
 	// JpaRepository(CrudRepository 자식 인터페이스): select limit, select order by, ... 
 
-	Page<Board> findByTitle(Pageable pageable, String word);
+	Page<Board> findByTitleContaining(Pageable pageable, String word);
+
 }
