@@ -16,7 +16,6 @@ public class MemberForm {
 	
 	public Member toEntity() {
 		Member entity = new Member();
-		entity.setMemberNo(this.memberNo);
 		entity.setMemberId(this.memberId);
 		entity.setMemberPw(this.memberPw);
 		return entity;
