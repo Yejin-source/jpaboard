@@ -15,7 +15,9 @@ public interface MemberRepository extends JpaRepository<Member, Integer> {
 	// 로그인 하는 추상메서드: findBy앤티티컬럼필드 ... And엔티티컬럼필드
 	MemberOnlyMemberId findByMemberIdAndMemberPw(String memgerId, String memberPw);
 	
-	// 멤버 목록 + 페이징
+	// 페이징
 	// Page<Member> findAll(Pageable pageable); // pw 노출
-	Page<MemberOnlyMemberId> findAllBy(Pageable pageable); // pw 노출 X
+	
+	// 멤버 목록 + 페이징
+	Page<MemberOnlyMemberId> findByMemberIdContaining(Pageable pageable, String word); // pw 노출 X
 }

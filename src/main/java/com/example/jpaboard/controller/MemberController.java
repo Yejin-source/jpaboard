@@ -1,7 +1,11 @@
 package com.example.jpaboard.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -75,7 +79,7 @@ public class MemberController {
 		
 		if(loginMember == null) {
 			log.debug("로그인 실패");
-			rda.addFlashAttribute("msg", "로그인 실패");
+			rda.addFlashAttribute("msg", "아이디 또는 비밀번호가 잘못되었습니다.");
 			return "redirect:/member/login";
 		}
 		
@@ -95,11 +99,27 @@ public class MemberController {
 	
 	// 회원 목록
 	@GetMapping("/member/memberList")
-	public String memberList(HttpSession session) {
+	public String memberList(HttpSession session, Model model 
+														, @RequestParam(value = "currentPage", defaultValue = "0") int currentPage
+														, @RequestParam(value = "rowPerPage", defaultValue = "10") int rowPerPage 
+														, @RequestParam(value = "word", defaultValue = "") String word) {
 		//session 인증/인가 검사
 		if(session.getAttribute("loginMember") == null) {
 			return "redirect:/member/login";
 		}
+		
+		Sort sort = Sort.by("memberNo").descending(); // 내림차순
+		
+							// PageRequest.of(현재 페이지, 페이지당 데이터 수, 정렬 방식)
+		PageRequest pageable = PageRequest.of(currentPage, rowPerPage, sort);
+		
+		// 사용자 목록 + 페이징
+		Page<MemberOnlyMemberId> list = memberRepository.findByMemberIdContaining(pageable, word);
+		
+		model.addAttribute("list", list);
+		model.addAttribute("PrePage", list.getNumber()-1);
+		model.addAttribute("nextPage", list.getNumber()+1);
+		model.addAttribute("word", word);
 		
 		// 사용자 목록 + 페이징 + id 검색
 		// Page<Member> = memberRepository.findByMemberIdContaining(Pageable pageable, String word);
@@ -127,7 +147,7 @@ public class MemberController {
 		MemberOnlyMemberId loginMember = (MemberOnlyMemberId)(session.getAttribute("loginMember"));
 		// session.getAttribute() -> Object 타입이기 때문에 형 변환 필요
 		if(loginMember == null) {
-			rda.addAttribute("msg", "로그인 세션이 만료되었습니다.");
+			rda.addFlashAttribute("msg", "로그인 세션이 만료되었습니다.");
 			return "redirect:/member/login";
 		}
 		
@@ -138,7 +158,7 @@ public class MemberController {
 		// 비밀번호가 일치하지 않는 경우 
 		if(!member.getMemberPw().equals(SHA256Util.encoding(oldPw))) {
 			log.debug("회원 정보 수정 실패");
-			rda.addAttribute("msg", "아이디 또는 비밀번호가 잘못되었습니다.");
+			rda.addFlashAttribute("msg", "아이디 또는 비밀번호가 잘못되었습니다.");
 			return "redirect:/member/modifyMemberPw";
 		}
 		
@@ -163,7 +183,7 @@ public class MemberController {
 	@GetMapping("/member/removeMember")
 	public String removeMember(HttpSession session, RedirectAttributes rda) {
 		if(session.getAttribute("loginMember") == null) {
-			rda.addAttribute("msg", "로그인 세션이 만료되었습니다.");
+			rda.addFlashAttribute("msg", "로그인 세션이 만료되었습니다.");
 			return "redirect:/member/login";
 		}
 		return "member/removeMember";
